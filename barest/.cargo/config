@@ -1,0 +1,15 @@
+[build]
+target = "x86_64-bootimage-barest.json"
+
+[unstable]
+build-std = ["core", "alloc", "compiler_builtins"]
+build-std-features = ["compiler-builtins-mem"]
+
+# Optionally, below will make cargo run to
+# build with bootimage and then run in qemu.
+# Otherwise, you can still run directly after cargo 
+# bootimage call using below on the terminal
+# qemu-system-x86_64 -drive format=raw,file=target/x86_64-bootimage-barest/debug/bootimage-barest.bin
+
+[target.'cfg(target_os = "none")']
+runner = "bootimage runner"
