@@ -275,3 +275,100 @@ pub fn run6() {
         assert!(x == 12)
     }
 }
+
+pub fn run7() {
+    //Error handling
+    //See his slides for references
+
+    //panic!("Problem. You called panic");
+
+    //Illustrate Some
+    let mut v = vec!["a", "b", "c"];
+
+    // pop an element from the vector
+    let x = v.pop();
+
+    /*
+    println!(
+        "x is: {}",
+        x.expect("I expect a value from my vector. You messed up")
+    );
+    */
+
+    //What if we know that there is a possibility of having no Some value
+
+    match x {
+        Some(value) => println!("Popped {}", value),
+        None => println!("Your vector is empty"),
+    }
+
+    //Compare above to:
+    let mut v2: Vec<&str> = Vec::new();
+
+    // let mut x2 = v2.pop().unwrap; // Will panic
+    // let mut x2 = v2.pop().expect("Do not call pop on an empty vector");
+
+    let x2 = v2.pop();
+
+    match x2 {
+        Some(value) => println!("Popped {}", value),
+        None => println!("Your vector is empty"),
+    }
+
+    //Let's use ? for Option
+    let mut v3 = vec![1, 2, 3];
+
+    let mut plus_one = || -> Option<i32> { Some(v3.pop()? + 1) };
+
+    println!("Plus one: {}", plus_one().unwrap());
+}
+
+//Let's see Result instead of Option
+//Here it returns OK value vs Err, unlike Option that returns Some value vs None
+
+//Adjust the following to return Result
+pub fn multiplier(numbers: &[f64]) -> f64 {
+    let mut product = 1f64;
+
+    for n in numbers {
+        product *= n;
+    }
+
+    product
+}
+
+//What if we want to return Error to the caller of this function when less than 2 arguments are passed?
+
+#[derive(Debug)]
+pub struct ErrorTypes {
+    pub number: u8,
+    pub message: &'static str,
+    pub detail: &'static str,
+}
+
+//Let's create static variables for our error types
+const INVALID_ARG_LEN_ERR:ErrorTypes = ErrorTypes {
+    number: 101,
+    message: "Invalid argument length",
+    detail: "Two or more arguments are expected."
+};
+
+const _INVALID_ARG_TYPE_ERR:ErrorTypes = ErrorTypes {
+    number: 102,
+    message: "Invalid argument type. f64 expected",
+    detail: "Invalid argument type. f64 expected. You must convert your argument to f64."
+};
+
+pub fn mature_multiplier(numbers: &[f64]) -> Result<f64, ErrorTypes> {
+    if numbers.len() < 2 {
+        return Err(INVALID_ARG_LEN_ERR);
+    };
+
+    let mut product = 1f64;
+
+    for n in numbers {
+        product *= n;
+    }
+
+    Ok(product)
+}
