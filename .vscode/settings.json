@@ -1,0 +1,5 @@
+{
+  "rust-analyzer.linkedProjects": [
+    "./rust_by_example/chapters/c2_guessing_game/guessing_game/Cargo.toml"
+  ]
+}
