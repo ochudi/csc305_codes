@@ -409,3 +409,50 @@ pub fn run9() {
         rects[1].area(),
     )
 }
+
+//You can also have multiple expressions in a declarative macro.
+//What if you want a second expression that contains defaults for length, width and name for the rect.
+//This implies that length, width and name will be optional.
+
+#[macro_export]
+macro_rules! rectangles_with_default {
+    (($($rect_props_tuple:expr), *), $default_tuple:expr) => {
+        {
+            let mut rect_vec = Vec::new();
+            let (default_length, default_width, default_name) = $default_tuple;
+
+            $(
+                let (length, width, name) = $rect_props_tuple;
+                let rect = Rect{
+                    length: if length.is_none() { default_length as f32 } else {length.unwrap() as f32},
+                    width: if width.is_none() { default_width as f32 } else {width.unwrap() as f32},
+                    name: if name.is_none() { default_name as &str } else {name.unwrap() as &str}
+                };
+                rect_vec.push(rect);
+            )*
+
+            rect_vec
+        }
+    };
+}
+
+pub fn run10() {
+    let rects = rectangles_with_default!(
+        (
+            (None as Option<i32>, Some(1), Some("rect_1")),
+            (Some(3.5), Some(7.0), None as Option<&str>)
+        ),
+        (1, 1, "default_name")
+    );
+
+    println!(
+        "Area of rectangle 1 = {}; Area of rectangle 2 = {}",
+        rects[0].area(),
+        rects[1].area(),
+    );
+    println!(
+        "Rectangle 1 is named: {}; Rectangle 2 is named: {}",
+        rects[0].name,
+        rects[1].name
+    );
+}
