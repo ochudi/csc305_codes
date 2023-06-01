@@ -1,10 +1,8 @@
 [package]
-name = "hello_world_lib"
+name = "rect_shape"
 version = "0.1.0"
 edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-rect_shape = { path = "../../rect_shape" }
-rect_shape_derive = { path = "../../rect_shape/rect_shape_derive" }
