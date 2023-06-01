@@ -347,16 +347,16 @@ pub struct ErrorTypes {
 }
 
 //Let's create static variables for our error types
-const INVALID_ARG_LEN_ERR:ErrorTypes = ErrorTypes {
+const INVALID_ARG_LEN_ERR: ErrorTypes = ErrorTypes {
     number: 101,
     message: "Invalid argument length",
-    detail: "Two or more arguments are expected."
+    detail: "Two or more arguments are expected.",
 };
 
-const _INVALID_ARG_TYPE_ERR:ErrorTypes = ErrorTypes {
+const _INVALID_ARG_TYPE_ERR: ErrorTypes = ErrorTypes {
     number: 102,
     message: "Invalid argument type. f64 expected",
-    detail: "Invalid argument type. f64 expected. You must convert your argument to f64."
+    detail: "Invalid argument type. f64 expected. You must convert your argument to f64.",
 };
 
 pub fn mature_multiplier(numbers: &[f64]) -> Result<f64, ErrorTypes> {
@@ -371,4 +371,41 @@ pub fn mature_multiplier(numbers: &[f64]) -> Result<f64, ErrorTypes> {
     }
 
     Ok(product)
+}
+
+/*
+Case 1: We would like to create a macro that would allow us instantiate
+one or more rectangles (along with their Shape trait impl) at a go. i.e., :
+rectangles!((length:f32, width:f32, name:&str),…,n)
+E.g., rectangles!((1, 1, "rect1"), (3.5, 7.0, "rect2"))
+ */
+
+#[macro_export] //in-built in Rust
+macro_rules! rectangles {
+    ($($rect_props_tuple:expr), *) => {
+        //I want to return a vector of rectangles.
+        {
+            let mut rect_vec = Vec::new();
+            //take our expression received, get the length, width and name from each
+            //and create the appropriate rectangle and push each to our vector.
+
+            $(let (length, width, name) = $rect_props_tuple;
+            let rect = Rect{length : length as f32, width : width as f32, name: name as &str};
+
+            rect_vec.push(rect);
+            )*
+
+            rect_vec
+        }
+    };
+}
+
+//Try our rectangles! Declarative macro.
+pub fn run9() {
+    let rects = rectangles!((1, 1, "rect_1"), (3.5, 7.0, "rect_2"));
+    println!(
+        "Area of rectangle 1 = {}; Area of rectangle 2 = {}",
+        rects[0].area(),
+        rects[1].area(),
+    )
 }

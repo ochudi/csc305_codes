@@ -58,6 +58,7 @@ fn main() {
     hello_world_lib::run3();
     hello_world_lib::run6();
     hello_world_lib::run7();
+    hello_world_lib::run9();
 
     let numbers = [1.0, 2.3, 4.5];
 
