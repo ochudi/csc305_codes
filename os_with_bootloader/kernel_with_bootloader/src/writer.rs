@@ -1,11 +1,8 @@
 mod constants;
 
-use core::{
-    fmt::{self, Write},
-    ptr,
-};
+use core::fmt;
 
-use bootloader_api::info::{FrameBufferInfo, PixelFormat};
+use bootloader_api::info::FrameBufferInfo;
 use constants::font_constants;
 use constants::font_constants::{BACKUP_CHAR, CHAR_RASTER_HEIGHT, FONT_WEIGHT};
 use noto_sans_mono_bitmap::{get_raster, RasterizedChar};
@@ -29,15 +26,14 @@ fn get_char_raster(c: char) -> RasterizedChar {
 
 /// Allows logging text to a pixel-based framebuffer.
 pub struct FrameBufferWriter {
-    framebuffer: &'static mut [u8],
+    pub framebuffer: &'static mut [u8],
     info: FrameBufferInfo,
     x_pos: usize,
     y_pos: usize,
+    text_color: [u8; 4],
 }
 
 impl FrameBufferWriter {
-    /// Creates a new logger that uses the given framebuffer.
-
     /// Creates a new logger that uses the given framebuffer.
     pub fn new(framebuffer: &'static mut [u8], info: FrameBufferInfo) -> Self {
         let mut logger = Self {
@@ -45,6 +41,7 @@ impl FrameBufferWriter {
             info,
             x_pos: 0,
             y_pos: 0,
+            text_color: [255, 255, 255, 0], // Default text color: white
         };
         logger.clear();
         logger
@@ -100,36 +97,34 @@ impl FrameBufferWriter {
     fn write_rendered_char(&mut self, rendered_char: RasterizedChar) {
         for (y, row) in rendered_char.raster().iter().enumerate() {
             for (x, byte) in row.iter().enumerate() {
-                self.write_pixel(self.x_pos + x, self.y_pos + y, *byte);
+                if *byte != 0 {
+                    let xpos = self.x_pos + x;
+                    let ypos = self.y_pos + y;
+                    self.set_pixel(xpos, ypos, self.text_color);
+                }
             }
         }
-        self.x_pos += rendered_char.width() + LETTER_SPACING;
+        self.x_pos += font_constants::CHAR_RASTER_WIDTH + LETTER_SPACING;
     }
 
-    fn write_pixel(&mut self, x: usize, y: usize, intensity: u8) {
-        let pixel_offset = y * self.info.stride + x;
-        let color = match self.info.pixel_format {
-            PixelFormat::Rgb => [intensity, intensity, intensity / 2, 0],
-            PixelFormat::Bgr => [intensity / 2, intensity, intensity, 0],
-            PixelFormat::U8 => [if intensity > 200 { 0xf } else { 0 }, 0, 0, 0],
-            other => {
-                // set a supported (but invalid) pixel format before panicking to avoid a double
-                // panic; it might not be readable though
-                self.info.pixel_format = PixelFormat::Rgb;
-                panic!("pixel format {:?} not supported in logger", other)
-            }
-        };
-        let bytes_per_pixel = self.info.bytes_per_pixel;
-        let byte_offset = pixel_offset * bytes_per_pixel;
-        self.framebuffer[byte_offset..(byte_offset + bytes_per_pixel)]
-            .copy_from_slice(&color[..bytes_per_pixel]);
-        let _ = unsafe { ptr::read_volatile(&self.framebuffer[byte_offset]) };
+    /// Sets the pixel at the given coordinates to the given color.
+    fn set_pixel(&mut self, x: usize, y: usize, color: [u8; 4]) {
+        let offset = (x + y * self.width()) * 4;
+        let frame_buffer = &mut self.framebuffer[offset..offset + 4];
+        frame_buffer.copy_from_slice(&color);
+    }
+
+    /// Sets the current write position for writing text.
+    pub fn set_write_position(&mut self, x: usize, y: usize) {
+        self.x_pos = x;
+        self.y_pos = y;
+    }
+
+    /// Sets the text color to the given color.
+    pub fn _set_text_color(&mut self, color: [u8; 4]) {
+        self.text_color = color;
     }
 }
-
-// Traits.
-unsafe impl Send for FrameBufferWriter {}
-unsafe impl Sync for FrameBufferWriter {}
 
 impl fmt::Write for FrameBufferWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
