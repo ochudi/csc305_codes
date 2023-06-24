@@ -8,7 +8,9 @@ fn panic(_info: &core::panic::PanicInfo) -> ! {
     }
 }
 
-use bootloader_api::config::Mapping;
+use core::fmt::Write;
+
+use bootloader_api::{config::Mapping, info::MemoryRegionKind};
 use writer::FrameBufferWriter;
 use x86_64::instructions::hlt;
 
@@ -33,6 +35,7 @@ macro_rules! print {
                 FrameBufferWriter::new(buffer, frame_buffer_info)
             };
             frame_buffer_writer.set_write_position(150, 150);
+            frame_buffer_writer._set_text_color([0, 255, 255, 0]);
             write!(frame_buffer_writer, $($arg)*).unwrap();
         }
     };
@@ -85,6 +88,43 @@ fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     */
 
     print!("Chukwudis-MacBook-Pro:kernel_with_bootloader ochudi$");
+
+    //Let's examine our memory
+    //Go through memory regions passed and add usable ones to our global allocator
+    let mut counter = 0 as u8;
+    for memory_region in boot_info.memory_regions.iter() {
+        counter += 1;
+        frame_buffer_writer
+            .write_fmt(format_args!("{}. ", counter)) //All other formatting macros (format!, write, println!, etc) are proxied through this one. format_args!, unlike its derived macros, avoids heap allocations.
+            .unwrap();
+        print!("{}. ", counter);
+        frame_buffer_writer
+            .write_fmt(format_args!("{:X} ", memory_region.start)) //All other formatting macros (format!, write, println!, etc) are proxied through this one. format_args!, unlike its derived macros, avoids heap allocations.
+            .unwrap();
+        print!("{:X}. ", memory_region.start);
+        frame_buffer_writer
+            .write_fmt(format_args!("{:X}, ", memory_region.end))
+            .unwrap();
+        print!("{:X}. ", memory_region.end);
+        frame_buffer_writer
+            .write_fmt(format_args!(
+                "size = {:X}, ",
+                memory_region.end - memory_region.start
+            ))
+            .unwrap();
+        print!("size = {:X}, ", memory_region.end - memory_region.start);
+        match memory_region.kind {
+            MemoryRegionKind::Usable => write!(frame_buffer_writer, "Usable; ").unwrap(),
+            MemoryRegionKind::Bootloader => write!(frame_buffer_writer, "Bootload;").unwrap(),
+            MemoryRegionKind::UnknownUefi(_) => {
+                write!(frame_buffer_writer, "UnknownUefi;").unwrap();
+            }
+            MemoryRegionKind::UnknownBios(_) => {
+                write!(frame_buffer_writer, "UnknownBios;").unwrap();
+            }
+            _ => write!(frame_buffer_writer, "UnknownBios;").unwrap(),
+        }
+    }
 
     loop {
         hlt();
