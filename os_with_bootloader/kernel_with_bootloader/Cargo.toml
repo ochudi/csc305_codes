@@ -7,7 +7,12 @@ edition = "2021"
 
 [dependencies]
 bootloader_api = "0.11.3"
+bootloader-x86_64-common = "0.11.3"
 x86_64 = "0.14.2"
 noto-sans-mono-bitmap = "0.2.0" #for our frame buffer writer.
+lazy_static = { version = "1.4", features = ["spin_no_std"] }
+spin = "0.5.2"
 good_memory_allocator = "0.1.7"
-spin = "0.9.8"
+pic8259 = "0.10.1"
+pc-keyboard = "0.5.0"
+#rusb = "0.9" #Rebuild first the dependencies, with core:: in place of std::
