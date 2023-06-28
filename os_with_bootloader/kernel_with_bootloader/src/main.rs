@@ -59,11 +59,9 @@ macro_rules! println {
     };
 }
 
-
 static mut BOOT_INFO: *mut bootloader_api::BootInfo = core::ptr::null_mut();
 
 fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
-
     unsafe {
         BOOT_INFO = boot_info;
     }
