@@ -22,6 +22,7 @@ pub struct FrameBufferWriter {
     info: FrameBufferInfo,
     x_pos: usize,
     y_pos: usize,
+    color: [u8; 4],
 }
 
 impl FrameBufferWriter {
@@ -31,6 +32,7 @@ impl FrameBufferWriter {
             info,
             x_pos: 0,
             y_pos: 0,
+            color: [255, 255, 255, 255],
         };
         logger.clear();
         logger
@@ -39,6 +41,10 @@ impl FrameBufferWriter {
     pub fn set_pos(&mut self, height: usize, width: usize) {
         self.x_pos += width;
         self.y_pos += height;
+    }
+
+    pub fn set_color(&mut self, color: [u8; 4]) {
+        self.color = color;
     }
 
     fn newline(&mut self) {

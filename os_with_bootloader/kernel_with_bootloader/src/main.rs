@@ -71,10 +71,12 @@ fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
     )
     .unwrap();
 
-    frame_buffer_writer.set_pos(200, 300);
+    frame_buffer_writer.set_pos(50, 200);
+    // frame_buffer_writer.set_color([255, 0, 0, 0]);
 
     print!("Changing the position! ");
-    print!("This sentence should follow... to test the print!() macro");
+    print!("Testing my print!() macro. ");
+    println!("Here is another sentence.");
     println!("This should be printed in the next line, to test the println!() macro.");
 
     init();
