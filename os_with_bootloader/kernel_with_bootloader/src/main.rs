@@ -34,8 +34,8 @@ macro_rules! print {
                 let buffer = boot_info.framebuffer.as_mut().unwrap().buffer_mut();
                 FrameBufferWriter::new(buffer, frame_buffer_info)
             };
-            frame_buffer_writer.set_write_position(150, 150);
-            frame_buffer_writer._set_text_color([0, 255, 255, 0]);
+            frame_buffer_writer.set_write_position(0, 0);
+            frame_buffer_writer._set_text_color([255, 255, 255, 255]);
             write!(frame_buffer_writer, $($arg)*).unwrap();
         }
     };
@@ -89,7 +89,7 @@ fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
 
     let mut frame_buffer_writer = FrameBufferWriter::new(buffer, frame_buffer_info);
 
-    frame_buffer_writer.set_write_position(150, 150);
+    // frame_buffer_writer.set_write_position(150, 150);
 
     /*
     frame_buffer_writer._set_text_color([0, 0, 255, 0]);
