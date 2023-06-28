@@ -1,16 +1,13 @@
 mod constants;
 
-use core::fmt;
-
-use bootloader_api::info::FrameBufferInfo;
+use bootloader_api::info::{FrameBufferInfo, PixelFormat};
 use constants::font_constants;
 use constants::font_constants::{BACKUP_CHAR, CHAR_RASTER_HEIGHT, FONT_WEIGHT};
+use core::{fmt, ptr};
 use noto_sans_mono_bitmap::{get_raster, RasterizedChar};
 
 const LINE_SPACING: usize = 2;
-
 const LETTER_SPACING: usize = 0;
-
 const BORDER_PADDING: usize = 1;
 
 fn get_char_raster(c: char) -> RasterizedChar {
@@ -21,12 +18,10 @@ fn get_char_raster(c: char) -> RasterizedChar {
 }
 
 pub struct FrameBufferWriter {
-    pub framebuffer: &'static mut [u8],
+    framebuffer: &'static mut [u8],
     info: FrameBufferInfo,
-    pub x_pos: usize,
-    pub y_pos: usize,
-    text_color: [u8; 4],
-    pub line_pos: usize,
+    x_pos: usize,
+    y_pos: usize,
 }
 
 impl FrameBufferWriter {
@@ -36,28 +31,23 @@ impl FrameBufferWriter {
             info,
             x_pos: 0,
             y_pos: 0,
-            text_color: [255, 255, 255, 255],
-            line_pos: 0,
         };
         logger.clear();
         logger
     }
 
+    pub fn set_pos(&mut self, height: usize, width: usize) {
+        self.x_pos += width;
+        self.y_pos += height;
+    }
+
     fn newline(&mut self) {
         self.y_pos += font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING;
-        self.carriage_return();
-        self.line_pos += 1;
+        self.carriage_return()
     }
 
     fn carriage_return(&mut self) {
         self.x_pos = BORDER_PADDING;
-    }
-
-    pub fn clear(&mut self) {
-        self.x_pos = BORDER_PADDING;
-        self.y_pos = BORDER_PADDING;
-        self.framebuffer.fill(0);
-        self.line_pos = 0;
     }
 
     fn width(&self) -> usize {
@@ -66,6 +56,12 @@ impl FrameBufferWriter {
 
     fn height(&self) -> usize {
         self.info.height
+    }
+
+    pub fn clear(&mut self) {
+        self.x_pos = BORDER_PADDING;
+        self.y_pos = BORDER_PADDING;
+        self.framebuffer.fill(0);
     }
 
     fn write_char(&mut self, c: char) {
@@ -87,34 +83,57 @@ impl FrameBufferWriter {
         }
     }
 
+    pub fn backspace(&mut self) {
+        if self.x_pos > BORDER_PADDING {
+            self.x_pos -= font_constants::CHAR_RASTER_WIDTH;
+        } else {
+            if self.y_pos
+                >= font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING + BORDER_PADDING
+            {
+                self.x_pos = self.width() - (font_constants::CHAR_RASTER_WIDTH + LETTER_SPACING);
+                self.y_pos -= font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING;
+            } else {
+                return;
+            }
+        }
+
+        for u in 0..font_constants::CHAR_RASTER_HEIGHT.val() {
+            for w in 0..font_constants::CHAR_RASTER_WIDTH {
+                self.write_pixel(self.x_pos + w, self.y_pos + u, 0);
+            }
+        }
+    }
+
     fn write_rendered_char(&mut self, rendered_char: RasterizedChar) {
         for (y, row) in rendered_char.raster().iter().enumerate() {
             for (x, byte) in row.iter().enumerate() {
-                if *byte != 0 {
-                    let xpos = self.x_pos + x;
-                    let ypos = self.y_pos + y;
-                    self.set_pixel(xpos, ypos, self.text_color);
-                }
+                self.write_pixel(self.x_pos + x, self.y_pos + y, *byte);
             }
         }
-        self.x_pos += font_constants::CHAR_RASTER_WIDTH + LETTER_SPACING;
+        self.x_pos += rendered_char.width() + LETTER_SPACING;
     }
 
-    fn set_pixel(&mut self, x: usize, y: usize, color: [u8; 4]) {
-        let offset = (x + y * self.width()) * 4;
-        let frame_buffer = &mut self.framebuffer[offset..offset + 4];
-        frame_buffer.copy_from_slice(&color);
-    }
-
-    pub fn set_write_position(&mut self, x: usize, y: usize) {
-        self.x_pos = x;
-        self.y_pos = y;
-    }
-
-    pub fn _set_text_color(&mut self, color: [u8; 4]) {
-        self.text_color = color;
+    fn write_pixel(&mut self, x: usize, y: usize, intensity: u8) {
+        let pixel_offset = y * self.info.stride + x;
+        let color = match self.info.pixel_format {
+            PixelFormat::Rgb => [intensity, intensity, intensity / 2, 0],
+            PixelFormat::Bgr => [intensity / 2, intensity, intensity, 0],
+            PixelFormat::U8 => [if intensity > 200 { 0xf } else { 0 }, 0, 0, 0],
+            other => {
+                self.info.pixel_format = PixelFormat::Rgb;
+                panic!("pixel format {:?} not supported in logger", other)
+            }
+        };
+        let bytes_per_pixel = self.info.bytes_per_pixel;
+        let byte_offset = pixel_offset * bytes_per_pixel;
+        self.framebuffer[byte_offset..(byte_offset + bytes_per_pixel)]
+            .copy_from_slice(&color[..bytes_per_pixel]);
+        let _ = unsafe { ptr::read_volatile(&self.framebuffer[byte_offset]) };
     }
 }
+
+unsafe impl Send for FrameBufferWriter {}
+unsafe impl Sync for FrameBufferWriter {}
 
 impl fmt::Write for FrameBufferWriter {
     fn write_str(&mut self, s: &str) -> fmt::Result {
