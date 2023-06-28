@@ -28,6 +28,7 @@ pub static BOOTLOADER_CONFIG: bootloader_api::BootloaderConfig = {
 
 bootloader_api::entry_point!(my_entry_point, config = &BOOTLOADER_CONFIG);
 
+//? CA Question A (2)
 #[macro_export]
 macro_rules! print {
     ($($stmt:tt)*) => {

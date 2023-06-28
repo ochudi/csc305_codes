@@ -38,6 +38,7 @@ impl FrameBufferWriter {
         logger
     }
 
+    //? CA Question A (1)
     pub fn set_pos(&mut self, height: usize, width: usize) {
         self.x_pos += width;
         self.y_pos += height;
@@ -89,6 +90,7 @@ impl FrameBufferWriter {
         }
     }
 
+    //? CA Question B (i)
     pub fn backspace(&mut self) {
         if self.x_pos > BORDER_PADDING {
             self.x_pos -= font_constants::CHAR_RASTER_WIDTH;
