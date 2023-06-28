@@ -41,6 +41,18 @@ macro_rules! print {
     };
 }
 
+#[macro_export]
+macro_rules! println {
+    () => {
+        $crate::print!("\n");
+    };
+    ($($arg:tt)*) => {
+        {
+            $crate::print!("{}\n", format_args!($($arg)*));
+        }
+    };
+}
+
 bootloader_api::entry_point!(my_entry_point, config = &BOOTLOADER_CONFIG);
 
 extern crate alloc;
@@ -97,22 +109,22 @@ fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
         frame_buffer_writer
             .write_fmt(format_args!("{}. ", counter)) //All other formatting macros (format!, write, println!, etc) are proxied through this one. format_args!, unlike its derived macros, avoids heap allocations.
             .unwrap();
-        print!("{}. ", counter);
+        //print!("{}. ", counter);
         frame_buffer_writer
             .write_fmt(format_args!("{:X} ", memory_region.start)) //All other formatting macros (format!, write, println!, etc) are proxied through this one. format_args!, unlike its derived macros, avoids heap allocations.
             .unwrap();
-        print!("{:X}. ", memory_region.start);
+        //print!("{:X}. ", memory_region.start);
         frame_buffer_writer
             .write_fmt(format_args!("{:X}, ", memory_region.end))
             .unwrap();
-        print!("{:X}. ", memory_region.end);
+        //print!("{:X}. ", memory_region.end);
         frame_buffer_writer
             .write_fmt(format_args!(
                 "size = {:X}, ",
                 memory_region.end - memory_region.start
             ))
             .unwrap();
-        print!("size = {:X}, ", memory_region.end - memory_region.start);
+        //print!("size = {:X}, ", memory_region.end - memory_region.start);
         match memory_region.kind {
             MemoryRegionKind::Usable => write!(frame_buffer_writer, "Usable; ").unwrap(),
             MemoryRegionKind::Bootloader => write!(frame_buffer_writer, "Bootload;").unwrap(),
@@ -125,6 +137,9 @@ fn my_entry_point(boot_info: &'static mut bootloader_api::BootInfo) -> ! {
             _ => write!(frame_buffer_writer, "UnknownBios;").unwrap(),
         }
     }
+
+    println!("Hello, world!");
+    println!("The answer is {}", 42);
 
     loop {
         hlt();
