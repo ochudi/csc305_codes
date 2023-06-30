@@ -97,9 +97,24 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
                             FRAME_BUFFER_WRITER.unwrap().as_mut().backspace();
                         }
                     } else if character == '\u{0009}' {
-                        // Tab character
                         unsafe {
                             FRAME_BUFFER_WRITER.unwrap().as_mut().tab();
+                        }
+                    } else if character == '\u{2190}' {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_left();
+                        }
+                    } else if character == '\u{2191}' {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_up();
+                        }
+                    } else if character == '\u{2192}' {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_right();
+                        }
+                    } else if character == '\u{2193}' {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_down();
                         }
                     } else {
                         print!("{}", character);
