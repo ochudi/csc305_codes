@@ -112,6 +112,44 @@ impl FrameBufferWriter {
         }
     }
 
+    //? Extras
+    pub fn arrow_up(&mut self) {
+        if self.y_pos > BORDER_PADDING {
+            self.y_pos -= font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING;
+        }
+    }
+
+    pub fn arrow_down(&mut self) {
+        if self.y_pos + font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING < self.height() {
+            self.y_pos += font_constants::CHAR_RASTER_HEIGHT.val() + LINE_SPACING;
+        }
+    }
+
+    pub fn arrow_left(&mut self) {
+        if self.x_pos > BORDER_PADDING {
+            self.x_pos -= font_constants::CHAR_RASTER_WIDTH;
+        }
+    }
+
+    pub fn arrow_right(&mut self) {
+        if self.x_pos + font_constants::CHAR_RASTER_WIDTH < self.width() {
+            self.x_pos += font_constants::CHAR_RASTER_WIDTH;
+        }
+    }
+
+    pub fn tab(&mut self) {
+        const TAB_WIDTH: usize = 4; // Number of characters to jump on tab
+
+        let remaining_space = self.width() - self.x_pos;
+        let tab_width = font_constants::CHAR_RASTER_WIDTH * TAB_WIDTH;
+
+        if remaining_space >= tab_width {
+            self.x_pos += tab_width;
+        } else {
+            self.newline();
+        }
+    }
+
     fn write_rendered_char(&mut self, rendered_char: RasterizedChar) {
         for (y, row) in rendered_char.raster().iter().enumerate() {
             for (x, byte) in row.iter().enumerate() {

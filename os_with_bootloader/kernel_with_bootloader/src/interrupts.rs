@@ -96,6 +96,11 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
                         unsafe {
                             FRAME_BUFFER_WRITER.unwrap().as_mut().backspace();
                         }
+                    } else if character == '\u{0009}' {
+                        // Tab character
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().tab();
+                        }
                     } else {
                         print!("{}", character);
                     }
