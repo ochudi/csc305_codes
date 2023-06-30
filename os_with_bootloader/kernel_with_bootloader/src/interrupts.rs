@@ -2,6 +2,7 @@ use crate::print;
 use crate::println;
 use crate::FRAME_BUFFER_WRITER;
 use core::fmt::Write;
+use pc_keyboard::KeyCode;
 use pic8259::ChainedPics;
 use spin;
 use x86_64::structures::idt::InterruptDescriptorTable;
@@ -63,7 +64,7 @@ impl InterruptIndex {
 }
 //Add a handler for Timer
 extern "x86-interrupt" fn timer_interrupt_handler(_stack_frame: InterruptStackFrame) {
-    //print!("."); //You can uncomment this to see that timer interrupt is on.
+    // print!("."); //You can uncomment this to see that timer interrupt is on.
     unsafe {
         PICS.lock()
             .notify_end_of_interrupt(InterruptIndex::Timer.as_u8());
@@ -100,27 +101,29 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
                         unsafe {
                             FRAME_BUFFER_WRITER.unwrap().as_mut().tab();
                         }
-                    } else if character == '\u{2190}' {
-                        unsafe {
-                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_left();
-                        }
-                    } else if character == '\u{2191}' {
-                        unsafe {
-                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_up();
-                        }
-                    } else if character == '\u{2192}' {
-                        unsafe {
-                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_right();
-                        }
-                    } else if character == '\u{2193}' {
-                        unsafe {
-                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_down();
-                        }
                     } else {
                         print!("{}", character);
                     }
                 }
-                DecodedKey::RawKey(key) => print!("{:?}", key),
+                DecodedKey::RawKey(key) => {
+                    if key == KeyCode::ArrowUp {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_up();
+                        }
+                    } else if key == KeyCode::ArrowDown {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_down();
+                        }
+                    } else if key == KeyCode::ArrowRight {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_right();
+                        }
+                    } else if key == KeyCode::ArrowLeft {
+                        unsafe {
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().arrow_left();
+                        }
+                    }
+                }
             }
         }
     }
