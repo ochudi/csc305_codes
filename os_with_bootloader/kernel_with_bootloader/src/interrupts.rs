@@ -1,6 +1,6 @@
 use crate::print;
 use crate::println;
-use crate::FRAMEBUFFER_WRITER;
+use crate::FRAME_BUFFER_WRITER;
 use core::fmt::Write;
 use pic8259::ChainedPics;
 use spin;
@@ -94,7 +94,7 @@ extern "x86-interrupt" fn keyboard_interrupt_handler(_stack_frame: InterruptStac
                     if character == '\u{0008}' {
                         // Check for backspace character
                         unsafe {
-                            FRAMEBUFFER_WRITER.unwrap().as_mut().backspace();
+                            FRAME_BUFFER_WRITER.unwrap().as_mut().backspace();
                         }
                     } else {
                         print!("{}", character);
