@@ -43,7 +43,7 @@ pub fn route(attr: TokenStream, item: TokenStream) -> TokenStream {
     //Get the original function name
     let name = input.sig.ident;
     //Get the arguments to the original function
-    let args = input.sig.inputs.clone();
+    let _args = input.sig.inputs.clone();
     //Get the function block {}
     let block = input.block;
     //Get the attributes
