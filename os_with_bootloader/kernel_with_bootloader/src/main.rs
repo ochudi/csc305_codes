@@ -20,6 +20,7 @@ mod writer;
 
 pub static mut FRAME_BUFFER: Option<NonNull<[u8]>> = None;
 pub static mut FRAME_BUFFER_WRITER: Option<NonNull<FrameBufferWriter>> = None;
+
 pub static BOOTLOADER_CONFIG: bootloader_api::BootloaderConfig = {
     let mut config = bootloader_api::BootloaderConfig::new_default();
     config.mappings.physical_memory = Some(Mapping::Dynamic);
@@ -46,7 +47,7 @@ macro_rules! println {
     ($($stmt:tt)*) => {
         {
             let frame_buffer_writer = unsafe { FRAME_BUFFER_WRITER.as_mut().unwrap().as_mut() };
-            
+
             writeln!(frame_buffer_writer, $($stmt)*).unwrap();
         }
     };
